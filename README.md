@@ -1,41 +1,102 @@
-# Nền tảng Ôn thi Trắc nghiệm Trực tuyến
+# Nền tảng Ôn thi Trắc nghiệm Trực tuyến (MVP)
 
-Bộ khung hệ thống web app ôn thi trắc nghiệm chuyên nghiệp, phục vụ trung tâm đào tạo, trường học, viện nghiên cứu và doanh nghiệp.
+Dự án Next.js App Router mở rộng từ landing page sẵn có, bổ sung đầy đủ luồng MVP cho hệ thống ôn thi:
 
-## Thành phần đã xây dựng
+- Đăng ký `/register`, đăng nhập `/login`, đăng xuất.
+- Dashboard phân luồng `/dashboard` theo role: `admin`, `teacher`, `student`.
+- Trang học viên `/student`.
+- Trang quản trị `/admin`.
+- Quản lý khóa học `/admin/courses`.
+- Quản lý ngân hàng câu hỏi `/admin/questions` (câu hỏi + A/B/C/D + đáp án đúng + giải thích).
+- Bảo vệ route bằng middleware.
+- Tích hợp Supabase Auth + Supabase Database qua REST API.
+- Server Actions cho các thao tác ghi dữ liệu.
+- Validation theo schema kiểu Zod (`lib/zod.ts`).
 
-- Kiến trúc hệ thống full-stack (frontend + backend + worker + storage + cache).
-- Thiết kế cơ sở dữ liệu chuẩn hóa cho ngân hàng câu hỏi, đề thi, lượt thi, chứng nhận.
-- Thiết kế API chi tiết theo chuẩn REST/OpenAPI.
-- Thiết kế UI/UX cho cả khu vực học viên và Admin Dashboard.
-- Tài liệu hướng dẫn cài đặt, vận hành, import câu hỏi Excel/Word.
+## Cấu trúc mới quan trọng
 
-## Cấu trúc thư mục
+- `app/actions.ts`: Server Actions cho auth + admin CRUD.
+- `app/register`, `app/login`, `app/dashboard`, `app/student`, `app/admin/*`: các route MVP.
+- `middleware.ts`: bảo vệ `/dashboard`, `/student`, `/admin`.
+- `lib/supabase.ts`: helper tích hợp Supabase Auth/Database.
+- `supabase/migrations/001_mvp.sql`: migration cho profiles/courses/questions + RLS.
+- `.env.example`: biến môi trường cần thiết.
 
-- `docs/architecture.md`: Kiến trúc tổng thể, luồng nghiệp vụ, bảo mật, mở rộng.
-- `docs/admin-guide.md`: Hướng dẫn sử dụng cho admin/giáo viên.
-- `docs/import-guide.md`: Hướng dẫn import câu hỏi mẫu từ Excel/Word.
-- `db/schema.sql`: Cấu trúc database PostgreSQL hoàn chỉnh.
-- `backend/openapi.yaml`: Thiết kế API backend đầy đủ endpoint cốt lõi.
-- `frontend/design-system.md`: Định hướng giao diện, UX pattern, responsive.
+## 1) Cấu hình Supabase
 
-## Khuyến nghị stack triển khai thực tế
+### Bước 1: Tạo project Supabase
 
-- Frontend: Next.js 15 + TypeScript + Tailwind + shadcn/ui.
-- Backend: NestJS + PostgreSQL + Redis + BullMQ.
-- Storage: S3-compatible (MinIO/S3) cho ảnh/file đính kèm.
-- Authentication: JWT + Refresh Token + RBAC.
-- Import Excel/Word: `xlsx` + `mammoth` + pipeline validate trước khi ghi DB.
-- Chứng nhận PDF: `pdf-lib` + QRCode.
+Tạo project mới tại Supabase dashboard và lấy:
 
-## Khởi tạo nhanh môi trường local (đề xuất)
+- `Project URL`
+- `anon public key`
 
-1. Cài Docker + Docker Compose.
-2. Dựng PostgreSQL/Redis/MinIO theo `docker-compose.yml` (cần tạo thêm ở bước triển khai code runtime).
-3. Chạy migration từ `db/schema.sql`.
-4. Triển khai backend theo hợp đồng API trong `backend/openapi.yaml`.
-5. Triển khai frontend theo guideline tại `frontend/design-system.md`.
+### Bước 2: Tạo biến môi trường
 
----
+Copy `.env.example` thành `.env.local`:
 
-Nếu bạn muốn, tôi có thể tiếp tục ở bước kế tiếp: dựng **code chạy thực tế** (Next.js + NestJS) theo đúng tài liệu trong repo này.
+```bash
+cp .env.example .env.local
+```
+
+Điền giá trị thật:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+```
+
+### Bước 3: Chạy migration SQL
+
+Vào SQL Editor của Supabase, chạy toàn bộ nội dung file:
+
+- `supabase/migrations/001_mvp.sql`
+
+Migration sẽ tạo:
+
+- `profiles` (role-based)
+- `courses`
+- `questions`
+- trigger tạo profile khi user đăng ký
+- RLS policies cho role `admin/teacher/student`
+
+## 2) Chạy local
+
+```bash
+npm install
+npm run dev
+```
+
+Mở `http://localhost:3000`.
+
+## 3) Build production
+
+```bash
+npm run build
+npm start
+```
+
+## 4) Deploy Vercel
+
+1. Push code lên GitHub.
+2. Import repo vào Vercel.
+3. Trong Vercel Project Settings → Environment Variables, thêm:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. Redeploy.
+
+## 5) Gợi ý vận hành role
+
+- User đăng ký mới mặc định role `student`.
+- Để cấp `teacher` hoặc `admin`, cập nhật cột `profiles.role` trong Supabase SQL Editor:
+
+```sql
+update public.profiles
+set role = 'admin'
+where id = '<user-id>';
+```
+
+## Lưu ý
+
+- Landing page gốc tại `/` vẫn được giữ nguyên và chỉ mở rộng thêm liên kết auth.
+- Dự án không tái tạo từ đầu, chỉ mở rộng trên codebase hiện có.

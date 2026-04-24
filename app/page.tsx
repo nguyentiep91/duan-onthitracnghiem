@@ -1,3 +1,6 @@
+import Link from 'next/link';
+import { AuthStatus } from '@/components/auth-status';
+
 const primaryFeatures = [
   {
     title: 'Ngân hàng câu hỏi thông minh',
@@ -35,7 +38,7 @@ const dashboardCards = [
   }
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
   return (
     <main>
       <header className="topbar">
@@ -45,7 +48,10 @@ export default function HomePage() {
             <a href="#features">Tính năng</a>
             <a href="#question-bank">Ngân hàng câu hỏi</a>
             <a href="#dashboards">Dashboard</a>
-            <button className="btn btn-secondary">Đăng ký</button>
+            <Link href="/register" className="btn btn-secondary">
+              Đăng ký
+            </Link>
+            <AuthStatus />
           </nav>
         </div>
       </header>
@@ -58,8 +64,12 @@ export default function HomePage() {
           thống kê kết quả học viên nhanh chóng, chính xác.
         </p>
         <div className="actions">
-          <button className="btn btn-primary">Bắt đầu ôn thi</button>
-          <button className="btn btn-light">Xem khóa học</button>
+          <Link href="/dashboard" className="btn btn-primary">
+            Bắt đầu ôn thi
+          </Link>
+          <Link href="/admin/courses" className="btn btn-light">
+            Xem khóa học
+          </Link>
         </div>
       </section>
 

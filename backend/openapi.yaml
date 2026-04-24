@@ -1,0 +1,192 @@
+openapi: 3.0.3
+info:
+  title: Online Exam Platform API
+  version: 1.0.0
+  description: API đặc tả cho nền tảng ôn thi trắc nghiệm.
+servers:
+  - url: https://api.exam-platform.local/v1
+
+tags:
+  - name: Auth
+  - name: Users
+  - name: Question Bank
+  - name: Import
+  - name: Exams
+  - name: Sessions
+  - name: Results
+  - name: Certificates
+  - name: Dashboard
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Đăng ký học viên
+      responses:
+        '201':
+          description: Created
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Đăng nhập
+      responses:
+        '200':
+          description: OK
+
+  /questions:
+    get:
+      tags: [Question Bank]
+      summary: Danh sách câu hỏi (lọc/phân trang)
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [Question Bank]
+      summary: Tạo câu hỏi
+      responses:
+        '201':
+          description: Created
+
+  /imports/questions/excel:
+    post:
+      tags: [Import]
+      summary: Upload Excel và tạo import job
+      responses:
+        '201':
+          description: Created
+
+  /imports/questions/word:
+    post:
+      tags: [Import]
+      summary: Upload Word và tạo import job
+      responses:
+        '201':
+          description: Created
+
+  /imports/{jobId}/preview:
+    get:
+      tags: [Import]
+      summary: Xem preview dữ liệu import
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+
+  /imports/{jobId}/confirm:
+    post:
+      tags: [Import]
+      summary: Xác nhận lưu dữ liệu import vào ngân hàng câu hỏi
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Imported
+
+  /exams:
+    get:
+      tags: [Exams]
+      summary: Danh sách đề thi
+      responses:
+        '200':
+          description: OK
+    post:
+      tags: [Exams]
+      summary: Tạo đề thi
+      responses:
+        '201':
+          description: Created
+
+  /exam-sessions/start:
+    post:
+      tags: [Sessions]
+      summary: Bắt đầu lượt thi
+      responses:
+        '201':
+          description: Created
+
+  /exam-sessions/{sessionId}/answers:
+    post:
+      tags: [Sessions]
+      summary: Lưu tạm đáp án (autosave)
+      parameters:
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Saved
+
+  /exam-sessions/{sessionId}/submit:
+    post:
+      tags: [Sessions]
+      summary: Nộp bài thi
+      parameters:
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Submitted
+
+  /results/me:
+    get:
+      tags: [Results]
+      summary: Lịch sử kết quả của học viên hiện tại
+      responses:
+        '200':
+          description: OK
+
+  /results/export:
+    get:
+      tags: [Results]
+      summary: Xuất kết quả ra Excel
+      responses:
+        '200':
+          description: File stream
+
+  /certificates/me:
+    get:
+      tags: [Certificates]
+      summary: Danh sách chứng nhận của học viên
+      responses:
+        '200':
+          description: OK
+
+  /certificates/lookup:
+    get:
+      tags: [Certificates]
+      summary: Tra cứu chứng nhận công khai
+      parameters:
+        - in: query
+          name: code
+          schema:
+            type: string
+        - in: query
+          name: phone
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+
+  /dashboard/summary:
+    get:
+      tags: [Dashboard]
+      summary: Số liệu tổng quan admin dashboard
+      responses:
+        '200':
+          description: OK
